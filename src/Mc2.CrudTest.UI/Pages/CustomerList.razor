@@ -1,0 +1,96 @@
+﻿@page "/customers"
+@using Mc2.CrudTest.UI.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager;
+@inject IJSRuntime JsRuntime
+
+
+<PageTitle>Customers</PageTitle>
+
+<h1>Customers</h1>
+
+@if (_customers == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Firstname</th>
+            <th>Lastname</th>
+            <th>DataOfBirth</th>
+            <th>PhoneNumber</th>
+            <th>EMail</th>
+            <th>BankAccountNumber</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (CustomerDto customer in _customers)
+        {
+            <tr>
+                <td>@customer.Firstname</td>
+                <td>@customer.Lastname</td>
+                <td>@customer.DateOfBirth</td>
+                <td>@customer.PhoneNumber</td>
+                <td>@customer.Email</td>
+                <td>@customer.BankAccountNumber</td>
+                <td>
+                    <button class="btn-outline-secondary" @onclick="@(() => Edit(customer))">Edit</button>
+                </td>
+                <td>
+                    <button class="btn-outline-danger" @onclick="@(() => DeleteAsync(customer))">Delete</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    private IList<CustomerDto>? _customers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _customers = await Http.GetFromJsonAsync<IList<CustomerDto>>("https://localhost:7092/api/v1/customers");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    private void Edit(CustomerDto customer)
+    {
+        NavigationManager.NavigateTo($"/edit-customer/{customer.Id}");
+    }
+
+    private async Task DeleteAsync(CustomerDto customer)
+    {
+        bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", "Are you sure?");
+        if (confirmed)
+        {
+            try
+            {
+                await Http.DeleteAsync($"https://localhost:7092/api/v1/customers/{customer.Id}");
+
+                _customers!.Remove(customer);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
+    }
+
+}

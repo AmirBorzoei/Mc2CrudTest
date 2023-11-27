@@ -1,0 +1,118 @@
+﻿@page "/create-customer"
+@page "/edit-customer/{Id:guid}"
+@using Mc2.CrudTest.UI.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager;
+
+@if (Id.HasValue)
+{
+    <h3>Edit Customer</h3>
+}
+else
+{
+    <h3>Create New Customer</h3>
+}
+
+@if (CurrentCustomer is null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <EditForm Model="@CurrentCustomer" OnValidSubmit="@SubmitNewCustomer">
+        <div class="col-6">
+            <DataAnnotationsValidator/>
+            <ValidationSummary/>
+
+            <p>
+                <label for="firstname" class="form-label">Firstname: </label>
+                <InputText id="firstname" class="form-control" @bind-Value="CurrentCustomer.Firstname"/>
+                <ValidationMessage For="() => CurrentCustomer.Firstname"/>
+            </p>
+            <p>
+                <label for="lastname" class="form-label">Lastname: </label>
+                <InputText id="lastname" class="form-control" @bind-Value="CurrentCustomer.Lastname"/>
+                <ValidationMessage For="() => CurrentCustomer.Lastname"/>
+            </p>
+            <p>
+                <label for="dateOfBirth" class="form-label">DateOfBirth: </label>
+                <InputDate id="dateOfBirth" class="form-control" @bind-Value="CurrentCustomer.DateOfBirth"/>
+                <ValidationMessage For="() => CurrentCustomer.DateOfBirth"/>
+            </p>
+            <p>
+                <label for="phoneNumber" class="form-label">PhoneNumber: </label>
+                <InputText id="phoneNumber" class="form-control" @bind-Value="CurrentCustomer.PhoneNumber"/>
+                <ValidationMessage For="() => CurrentCustomer.PhoneNumber"/>
+            </p>
+            <p>
+                <label for="eMail" class="form-label">EMail: </label>
+                <InputText id="eMail" class="form-control" @bind-Value="CurrentCustomer.Email"/>
+                <ValidationMessage For="() => CurrentCustomer.Email"/>
+            </p>
+            <p>
+                <label for="bankAccountNumber" class="form-label">BankAccountNumber: </label>
+                <InputText id="bankAccountNumber" class="form-control" @bind-Value="CurrentCustomer.BankAccountNumber"/>
+                <ValidationMessage For="() => CurrentCustomer.BankAccountNumber"/>
+            </p>
+
+            <div class="row p-3">
+                <button type="submit" class="btn btn-outline-primary col">Submit</button>
+                <button type="button" class="btn btn-outline-secondary col" @onclick="BackToList">Cancel</button>
+            </div>
+        </div>
+    </EditForm>
+}
+
+@code {
+
+        const string CustomersApiUrl = "https://localhost:7092/api/v1/customers";
+
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    public CustomerDto? CurrentCustomer { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id.HasValue)
+        {
+            CurrentCustomer = await Http.GetFromJsonAsync<CustomerDto>($"https://localhost:7092/api/v1/customers/{Id}");
+        }
+        else
+        {
+            CurrentCustomer = new CustomerDto
+            {
+                DateOfBirth = DateOnly.FromDateTime(DateTime.Now.AddYears(-20))
+            };
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    private async Task SubmitNewCustomer()
+    {
+        try
+        {
+            HttpResponseMessage httpResponseMessage = Id.HasValue ?
+                await Http.PutAsJsonAsync(CustomersApiUrl + "/" + Id, CurrentCustomer) :
+                await Http.PostAsJsonAsync(CustomersApiUrl, CurrentCustomer);
+
+            string result = await httpResponseMessage.Content.ReadAsStringAsync();
+
+            BackToList();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    private void BackToList()
+    {
+        NavigationManager.NavigateTo("/customers");
+    }
+
+}

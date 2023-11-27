@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\framework\Mc2.Framework.Core\Mc2.Framework.Core.csproj" />
+    <ProjectReference Include="..\Mc2.CrudTest.Domain.Contract\Mc2.CrudTest.Domain.Contract.csproj" />
+  </ItemGroup>
+
+</Project>
